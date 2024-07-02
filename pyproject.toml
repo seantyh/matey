@@ -1,0 +1,26 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "matey"
+version = "2024.07.01"
+dependencies = [
+  "litellm",
+  "nbformat",
+  "chromadb"
+]
+requires-python = ">=3.10"
+authors = [
+  {name = "Sean Tseng", email = "seantyh@gmail.com"},  
+]
+maintainers = [
+  {name = "Sean Tseng", email = "seantyh@gmail.com"},  
+]
+description = "Mate"
+readme = "README.md"
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Programming Language :: Python"
+]
+
