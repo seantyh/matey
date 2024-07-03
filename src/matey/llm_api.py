@@ -38,11 +38,14 @@ def llm(message, state=[], return_raw=False):
   return haiku(message, state, return_raw)
 
 def init_usage_stat():
-  return {"prompt": 0, "competion": 0}
+  return {"prompt": 0, "completion": 0}
 class Session:
-  def __init__(self, system_prompt):
+  def __init__(self, system_prompt=None):
+
     if system_prompt:
       self.states = [{"role": "system", "content": system_prompt}]
+    else:
+      self.states = []
     self.usage_stat = defaultdict(init_usage_stat)
 
   def add_usage(self, model_key, used_token):
