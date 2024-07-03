@@ -10,7 +10,7 @@ def chatgpt(message, state=[], return_raw=False):
   if return_raw:
     return resp
   else:
-    return resp["choices"][0]["message"]["content"]
+    return resp["choices"][0]["message"]["content"]   # type: ignore
 
 def sonnet(message, state=[], return_raw=False):  
   messages = [*state,
@@ -21,7 +21,7 @@ def sonnet(message, state=[], return_raw=False):
   if return_raw:
     return resp
   else:
-    return resp["choices"][0]["message"]["content"]
+    return resp["choices"][0]["message"]["content"]   # type: ignore
 
 def haiku(message, state=[], return_raw=False):  
   messages = [*state,
@@ -32,20 +32,23 @@ def haiku(message, state=[], return_raw=False):
   if return_raw:
     return resp
   else:
-    return resp["choices"][0]["message"]["content"]
+    return resp["choices"][0]["message"]["content"]   # type: ignore
 
-def llm(message, state=[]):
-  return haiku(message, state)
+def llm(message, state=[], return_raw=False):
+  return haiku(message, state, return_raw)
 
+def init_usage_stat():
+  return {"prompt": 0, "competion": 0}
 class Session:
-  def __init__(self):
-    self.states = []
-    self.usage_stat = defaultdict(lambda: {"prompt": 0, "completion": 0})
+  def __init__(self, system_prompt):
+    if system_prompt:
+      self.states = [{"role": "system", "content": system_prompt}]
+    self.usage_stat = defaultdict(init_usage_stat)
 
   def add_usage(self, model_key, used_token):
     stat = self.usage_stat[model_key]
-    stat["prompt"] += used_token.get("prompt", 0)
-    stat["completion"] += used_token.get("completion", 0)
+    stat["prompt"] += used_token.prompt_tokens
+    stat["completion"] += used_token.completion_tokens
 
   def usage(self):
     return self.usage
