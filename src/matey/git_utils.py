@@ -40,3 +40,9 @@ def recently_worked_on_files(days=7):
                        capture_output=True, text=True).stdout.strip()
   files = out.splitlines()  
   return files
+
+def get_files_changed(commit_hash):
+  out = subprocess.run(["git", "show", '--name-only', commit_hash],
+                        capture_output=True, text=True).stdout.strip()
+  files = out.splitlines()
+  return files

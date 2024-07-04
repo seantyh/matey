@@ -13,4 +13,7 @@ file_history:
   args:
   - filename: 檔案路徑
 
+files_in_commit:
+  description: 給定一個commit hash，這個工具會傳回該commit中編輯的檔案
+
 

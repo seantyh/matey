@@ -30,7 +30,7 @@ def db_delete(key, collection="matey"):
     coll = db_client.collection(collection) 
     coll.document(key).delete()
 
-def db_query(queries, collection="matey"):
+def db_query(queries, collection="matey", return_docref=False):
     global db_client
     if db_client is None:
         db_client = get_db()
@@ -38,5 +38,9 @@ def db_query(queries, collection="matey"):
     docs = coll
     for query_x in queries:
         docs = docs.where(filter=firestore.FieldFilter(*query_x))
+        
     docs = docs.stream()
-    return [doc.to_dict() for doc in docs]
+    if return_docref:
+        return docs
+    else:
+        return [doc.to_dict() for doc in docs]

@@ -3,11 +3,7 @@ Your task is to summarize and categorize the contents of this notebook, describi
 
 Pay special attention to integrating any comments from the author found in the code or Markdown into your summary.
 
-These notebooks may contain sections on Data dependencies, which declare the input data,
- and Export Artefacts, which declare the output data. You need to list these sections separately, 
- including the file paths and their sha1 hashes. For R notebooks, Input data may be the file sha1sums listed 
- at the beginning of the notebook; Export Artefacts are the file sha1sums calculated for the output files 
- at the end of the notebook.
+Always respond with the format in the Ouput Format Example
 
 Notebook Content
 -------------
@@ -16,6 +12,7 @@ Notebook Path: {filename}
 
 Output Format Example
 -----------
+Name: (filepath)
 Title: (Describe the functionality of this notebook in one sentence 50 words or less: 
  e.g., "Using a linear regression model to analyze the data.")
 
@@ -24,13 +21,5 @@ Title: (Describe the functionality of this notebook in one sentence 50 words or 
 ....
 
 Note (Optinoal):
-- (summarize comments or issues mentioned in the notebook)
-- (summarize todo items mentioned in the notebook)
-
-Input data:
-(list all the input sha1sum entries listed in notebook, with the following format)
-- 2468d484f548d0adbb7271ca5db2d8576139805e ../data/example_input.txt
-
-Output data:
-(list all the output sha1sum entries listed in notebook, with the following format)
-- ca5db2d8576139805e2468d484f548d0adbb7271 ../data/example_output.txt
+- (extract and summarize comments or issues mentioned in the notebook)
+- (extract and summarize todo items mentioned in the notebook)
