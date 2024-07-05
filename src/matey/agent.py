@@ -2,10 +2,10 @@ from pathlib import Path
 from datetime import datetime, timedelta
 import hashlib
 from .llm_api import Session
-from .ipynb_api import Notebook
+from .notebook import Notebook
 from .db import db_put, db_get, db_query
 from .config_utils import get_config
-
+from .image_utils import get_image_base64
 
 def get_repo_id(repo_id=None):
   if repo_id is None:
@@ -105,7 +105,28 @@ class DataIOAgent:
     prompt = (Path(__file__).parent / "prompts/dataio_prompt.txt").read_text()
     return self.session(prompt.replace("{context}", context))
     
-  
+class SummaryAgent:
+  def __init__(self):    
+    self.repo_id = get_repo_id()    
+    self.session = Session()
 
+  def __call__(self, context):
+    prompt = "Summarize the following text: \n{context}\n\n## Summary\n\n"
+    return self.session(prompt.replace("{context}", context))
+
+class CaptionAgent:
+  def __init__(self):
+    self.repo_id = get_repo_id()    
+    self.session = Session()
+  
+  def __call__(self, image_path, prompt=None):
+    if prompt is None:
+      prompt = "Describe this image"
+    image_base64 = get_image_base64(image_path)
+    if image_base64 is None:
+      return "Error: Could not load image"
+    message = [{"type": "text", "text": prompt}, 
+               {"type": "image_url", "image_url": {"url": image_base64}}]
+    return self.session(message)
   
     

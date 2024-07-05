@@ -1,55 +1,12 @@
-
-# %%
 import re
-import base64
-from io import BytesIO, StringIO
+import json
 from pathlib import Path
+from io import StringIO
 import hashlib
 import nbformat
-from PIL import Image
-from dataclasses import dataclass
+from .agent import DataIOAgent, SummaryAgent
 
-class CellOutput:
-    def __init__(self, **kwargs):
-        self.output_type = kwargs.get("output_type", "")
-        self.data = kwargs.get("data", {})
-        text = kwargs.get("text", [])
-        if text:
-            self.data["text/plain"] = text
-        self.metadata = kwargs.get("metadata", {})
-        self.execution_count = kwargs.get("execution_count", 0)
-
-    def get_data(self, mime_type: str):
-        data = self.data.get(mime_type, "")
-        if isinstance(data, list):
-            data = "\n".join(data)
-        return data
-                    
-    def __repr__(self):
-        data_types = ", ".join(self.data.keys())
-        return f"<CellOutput: {self.output_type}, {data_types}>"
-
-@dataclass
-class NotebookCell:
-    cell_type: str
-    source: str
-    outputs: list[CellOutput]    
-    metadata: dict
-
-    def __str__(self):
-        out = StringIO()
-
-        if self.cell_type == "markdown":
-            out.write(self.source)
-        if self.cell_type == "code":
-            if self.source:
-              out.write(f"```\n{self.source}\n```\n")            
-
-        if self.outputs:
-          out.write("Output:\n")
-          for output_x in self.outputs:
-            out.write(f"```\n{output_x.get_data('text/plain')}\n```\n")
-        return out.getvalue()
+from .ipynb_types import NotebookCell, CellOutput
 
 class Notebook:
     def __init__(self, filename, filehash, cells):
@@ -97,19 +54,32 @@ class Notebook:
                     continue
         return hits          
         
-    def locate_cell(self, cell_type=None, keyword=None):
-        assert cell_type or keyword, "Must provide cell_type or keyword"
+    def locate_cell(self, *, 
+                    cell_type=None, 
+                    source=None, 
+                    tag=None) -> tuple[int, NotebookCell] | None:
+        assert cell_type or source or tag, "Must provide cell_type or keyword"
 
         hit_cell = None
-        if keyword:
-            pat = re.compile(keyword, re.IGNORECASE)
+        if source:
+            pat = re.compile(source, re.IGNORECASE)
         else:
             pat = re.compile("")
 
+        if tag:
+            tag_pat = re.compile(tag, re.IGNORECASE)
+        else:
+            tag_pat = re.compile("")
+        
+        hit_cell = None
         for cidx, c in enumerate(self.cells):
+            metadata_tags = ",".join(c.metadata.get("tags", []))
+
+            if tag and tag_pat.search(metadata_tags) is None:
+                continue            
             if cell_type and c.cell_type != cell_type:
-                continue
-            if keyword and pat.search(c.source.lower()) is None:
+                continue            
+            if source and pat.search(c.source.lower()) is None:
                 continue
 
             hit_cell = (cidx, c)
@@ -131,7 +101,11 @@ class Notebook:
         return ret
     
     def input_files(self):
-        loc_cell = self.locate_cell(cell_type="markdown", keyword="Data dependencies")
+        loc_cell = self.locate_cell(tag="indata")
+        if loc_cell is None:
+            loc_cell = self.locate_cell(cell_type="markdown", source="Data dependencies")
+
+        # Do the actual processing    
         if loc_cell is not None:
             tgt_cell_idx = loc_cell[0]+1
             tgt_cell = self.cells[tgt_cell_idx]
@@ -144,7 +118,11 @@ class Notebook:
         return None
     
     def output_files(self):
-        loc_cell = self.locate_cell(cell_type="markdown", keyword="Export Art[ie]facts?")
+        loc_cell = self.locate_cell(tag="outdata")
+        if loc_cell is None:
+            loc_cell = self.locate_cell(cell_type="markdown", source="Export Art[ie]facts?")
+        
+        # Do the actual processing
         if loc_cell is not None:
             tgt_cell_idx = loc_cell[0]+1
             tgt_cell = self.cells[tgt_cell_idx]
@@ -157,7 +135,32 @@ class Notebook:
         
         return None
 
-def decode_image(b64_image:str):
-    img_bytes = base64.b64decode(b64_image)
-    img = Image.open(BytesIO(img_bytes))
-    return img
+    def get_data_io(self):
+        if self.locate_cell(tag="no[_-. ]?input") is not None:
+            input_files = []
+        else:
+            input_files = self.input_files()
+        
+        if self.locate_cell(tag="no[_-. ]?output") is not None:
+            output_files = []
+        else:
+            output_files = self.output_files()
+
+        if input_files is None or output_files is None:        
+            io_agent = DataIOAgent()
+            hash_cells = self.search("[a-z0-9]{40}")
+            cell_rags = "\n".join(str(cell_x) for cell_x in hash_cells)
+            io_resp = io_agent(cell_rags)
+            try:
+                io_resp = json.loads(io_resp)
+            except json.JSONDecodeError:
+                io_resp = {}
+            input_files = io_resp.get("inputs", [])
+            output_files = io_resp.get("outputs", [])
+
+        return {"inputs": input_files, "outputs": output_files}
+
+    def summarize(self):
+        sum_agent = SummaryAgent()
+        rag_text = self.to_rag()
+        summary = sum_agent(rag_text)

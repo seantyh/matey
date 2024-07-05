@@ -3,6 +3,7 @@ from pathlib import Path
 import numpy as np
 from sklearn.neighbors import NearestNeighbors
 from litellm import embedding
+from .config_utils import get_config
 
 def load_vecmat(fpath):
   if not Path(fpath).exists():
@@ -15,7 +16,12 @@ def load_metadata(fpath):
   return json.loads(Path(fpath).read_text())
 
 class VecDB:  
-  def __init__(self, embmat_path="vdb.npy", metadata_path="vdb.json"):    
+  def __init__(self, embmat_path=None, metadata_path=None):    
+    vdb_prefix = get_config().get("vdb_prefix", "vdb")  # type: ignore
+    if embmat_path is None:
+      embmat_path =  vdb_prefix + ".npy"
+    if metadata_path is None:
+      metadata_path = vdb_prefix + ".json"
     self.embmat_path = embmat_path
     self.metadata_path = metadata_path
     self.embmat = load_vecmat(embmat_path)

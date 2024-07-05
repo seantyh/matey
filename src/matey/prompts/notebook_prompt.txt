@@ -1,25 +1,25 @@
 The following content is extracted from an ipynb notebook. This notebook contains code (possibly in Julia, R, or Python) and some Markdown, and there may be comments within the code.
 Your task is to summarize and categorize the contents of this notebook, describing what was done in the notebook in a bullet-point format.
+Pay attention to the comments and the markdown texts in the notebook. Summarize those texts in bullet points under the Note section.
+If there are texts marked with TODO, you are required to extract and summarize those items.
 
 Pay special attention to integrating any comments from the author found in the code or Markdown into your summary.
 
 Always respond with the format in the Ouput Format Example
 
-Notebook Content
--------------
+## Notebook Content
 Notebook Path: {filename}
 {rag_text}
 
-Output Format Example
------------
+## Output Format Example
 Name: (filepath)
-Title: (Describe the functionality of this notebook in one sentence 50 words or less: 
+Summary: (Describe what this notebook is doing in one sentence, i.e. 50 words or less,
  e.g., "Using a linear regression model to analyze the data.")
 
 1. (Step 1)
 2. (Step 2)
 ....
 
-Note (Optinoal):
-- (extract and summarize comments or issues mentioned in the notebook)
-- (extract and summarize todo items mentioned in the notebook)
+Note:
+- (extract and summarize comments, notes, todos mentioned in the notebook)
+...
