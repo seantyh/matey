@@ -6,11 +6,16 @@ from .db import db_put, db_get, db_query
 from .config_utils import get_config
 from .image_utils import get_image_base64
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+  from .notebook import Notebook
+
 def get_repo_id(repo_id=None):
   if repo_id is None:
     config = get_config()
     repo_id = config.get("repo_id", "matey")  # type: ignore
   return repo_id
+
 class DispatchAgent:
   def __init__(self, prefix=None):
     system_prompt = (Path(__file__).parent / "prompts/system_prompt.txt").read_text()

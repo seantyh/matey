@@ -1,7 +1,9 @@
 Help the user find the input data hash and output data hash based on the context.
 The context is from the content of the relevant jupyter notebook cells.
 Use the code and the order to decide the input and output data hashes.
-If the code has the variable name with "out," it might be the output hash.
+If the code has the variable name with "out," it is the output hash.
+
+It is possible that the inputs is empty or the outputs is empty.
 
 Follow the follwing output example, and always only respond with a JSON object .
 ## Output Example

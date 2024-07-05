@@ -137,17 +137,17 @@ class Notebook:
         return None
 
     def get_data_io(self):
-        if self.locate_cell(tag="no[_-. ]?input") is not None:
+        if self.locate_cell(tag=r"no[_\-. ]?in(puts?|data)") is not None:
             input_files = []
         else:
             input_files = self.input_files()
         
-        if self.locate_cell(tag="no[_-. ]?output") is not None:
+        if self.locate_cell(tag=r"no[_\-. ]?out(puts?|data)") is not None:
             output_files = []
         else:
             output_files = self.output_files()
 
-        if input_files is None or output_files is None:        
+        if input_files is None or output_files is None:                                
             io_agent = DataIOAgent()
             hash_cells = self.search("[a-z0-9]{40}")
             cell_rags = "\n".join(str(cell_x) for cell_x in hash_cells)
@@ -156,8 +156,12 @@ class Notebook:
                 io_resp = json.loads(io_resp)
             except json.JSONDecodeError:
                 io_resp = {}
-            input_files = io_resp.get("inputs", [])
-            output_files = io_resp.get("outputs", [])
+
+            if input_files is None:
+              input_files = io_resp.get("inputs", [])
+            
+            if output_files is None:
+              output_files = io_resp.get("outputs", [])
 
         return {"inputs": input_files, "outputs": output_files}
 
