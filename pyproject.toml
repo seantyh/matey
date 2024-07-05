@@ -8,6 +8,7 @@ version = "2024.07.01"
 dependencies = [
   "litellm",
   "nbformat",
+  "chromadb",
   "google-cloud-firestore"
 ]
 requires-python = ">=3.10"
