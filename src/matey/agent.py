@@ -2,7 +2,6 @@ from pathlib import Path
 from datetime import datetime, timedelta
 import hashlib
 from .llm_api import Session
-from .notebook import Notebook
 from .db import db_put, db_get, db_query
 from .config_utils import get_config
 from .image_utils import get_image_base64
@@ -68,11 +67,7 @@ class NotebookAgent:
     self.agent_prefix = "NAgent-00a"
     self.repo_id = get_repo_id(repo_id)
 
-  def __call__(self, nb_path, use_cache=True):
-    nb_path = Path(nb_path)
-    if not nb_path.exists():
-      raise FileNotFoundError(f"Notebook file not found: {nb_path}")
-    nb = Notebook.load(nb_path)
+  def __call__(self, nb: "Notebook", use_cache=True):
     nb_fingerprint = f"{self.agent_prefix}-{nb.filename}-{nb.filehash}"
 
     doc = db_get(nb_fingerprint)
@@ -83,7 +78,7 @@ class NotebookAgent:
       db_put(nb_fingerprint, {"type": "notebook_summary",
                               "repo": self.repo_id,
                               "summary": summary, 
-                              "filepath": str(nb_path), 
+                              "filepath": str(nb.filename), 
                               "filehash": nb.filehash, 
                               "timestamp": datetime.now()})
       return summary

@@ -4,13 +4,14 @@ from pathlib import Path
 from io import StringIO
 import hashlib
 import nbformat
-from .agent import DataIOAgent, SummaryAgent
+from .agent import DataIOAgent, NotebookAgent
 
 from .ipynb_types import NotebookCell, CellOutput
 
 class Notebook:
-    def __init__(self, filename, filehash, cells):
-        self.filename: str = filename
+    def __init__(self, filepath, filehash, cells):
+        self.filepath = filepath
+        self.filename: str = Path(filepath).stem
         self.filehash: str = filehash
         self.cells: list[NotebookCell] = cells
 
@@ -160,7 +161,7 @@ class Notebook:
 
         return {"inputs": input_files, "outputs": output_files}
 
-    def summarize(self):
-        sum_agent = SummaryAgent()
-        rag_text = self.to_rag()
-        summary = sum_agent(rag_text)
+    def summarize(self, use_cache=True):
+        nb_agent = NotebookAgent()        
+        summary = nb_agent(self, use_cache=use_cache)
+        return summary
