@@ -8,3 +8,4 @@ from .git_utils import (
 from .db import db_put, db_get, db_delete, db_query
 from .agent import ChatAgent, NotebookAgent, DispatchAgent, DataIOAgent
 from .config_utils import get_config
+from .vec_db import VecDB
