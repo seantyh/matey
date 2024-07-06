@@ -32,6 +32,8 @@ class VecDB:
       text_list = [text_list]
     if metadata is None:
       metadata = [{"text": x} for x in text_list]    
+    if isinstance(metadata, dict):
+      metadata = [metadata]
     assert isinstance(metadata, list), "metadata must be a list of dictionaries"
     assert isinstance(metadata[0], dict), "metadata must be a list of dictionaries"
     assert len(text_list) == len(metadata)
@@ -53,7 +55,14 @@ class VecDB:
     else:
       self.embmat = np.concatenate([self.embmat, emb_list], axis=0)
     self.metadata.extend(metadata)
+  
+  def ls(self):
+    def short(x):
+      return x[:30] + ("..." if len(x) > 30 else "")
     
+    for i, md in enumerate(self.metadata):
+      print(i, short(md["text"]))
+        
   def query(self, query:str|list[str]):
     emb_resp = embedding(model="text-embedding-3-small", input=query)
     q_emb = np.array(emb_resp["data"][0]["embedding"])

@@ -32,7 +32,7 @@ class DocStore:
     doc = db_get(doc_id, return_ref=True)
     return doc
 
-  def list(self, since_days: int|None=None):
+  def ls(self, since_days: int|None=None):
     docs = self.query(since_days)
     return [{"id": doc.id, **doc.to_dict()} for doc in docs]  # type: ignore
   
