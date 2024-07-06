@@ -12,14 +12,15 @@ def db_put(key, value, collection="matey"):
     coll = db_client.collection(collection) 
     coll.document(key).set(value)
 
-def db_get(key, collection="matey"):
+def db_get(key, collection="matey", return_ref=False):
     global db_client
     if db_client is None:
         db_client = get_db()
     coll = db_client.collection(collection) 
-    doc = coll.document(key).get()
+    docref = coll.document(key)    
+    doc = docref.get()
     if doc.exists:
-        return doc.to_dict()
+        return docref if return_ref else doc.to_dict()
     else:
         return None
 
@@ -28,9 +29,9 @@ def db_delete(key, collection="matey"):
     if db_client is None:
         db_client = get_db()
     coll = db_client.collection(collection) 
-    coll.document(key).delete()
+    return coll.document(key).delete()
 
-def db_query(queries, collection="matey", return_docref=False):
+def db_query(queries, collection="matey", return_dict=True):
     global db_client
     if db_client is None:
         db_client = get_db()
@@ -40,7 +41,7 @@ def db_query(queries, collection="matey", return_docref=False):
         docs = docs.where(filter=firestore.FieldFilter(*query_x))
         
     docs = docs.stream()
-    if return_docref:
-        return docs
-    else:
+    if return_dict:
         return [doc.to_dict() for doc in docs]
+    else:
+        return docs

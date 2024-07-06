@@ -28,14 +28,18 @@ class VecDB:
     self.metadata = load_metadata(metadata_path)
   
   def store(self, text_list, metadata=None):
-    if metadata is None:
-      metadata = [{"text": x} for x in text_list]
     if isinstance(text_list, str):
       text_list = [text_list]
-    if isinstance(metadata, str):
-      metadata = [metadata]
-
+    if metadata is None:
+      metadata = [{"text": x} for x in text_list]    
+    assert isinstance(metadata, list), "metadata must be a list of dictionaries"
+    assert isinstance(metadata[0], dict), "metadata must be a list of dictionaries"
     assert len(text_list) == len(metadata)
+
+    # ensure there is a text field in metadata
+    for txt, md in zip(text_list, metadata):
+      if "text" not in md:
+        md["text"] = txt
 
     emb_resp = embedding(
       model="text-embedding-3-small", 

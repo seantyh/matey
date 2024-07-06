@@ -36,15 +36,18 @@ class ChatAgent:
     else:
       self.prefix = prefix
 
-  def __call__(self, message):
+  def __call__(self, message, context=None):
+    if context is not None:
+      message = "Here are some contexts for this conversation: \n" +\
+                "## Context\n" + context + "\n\n" + message
     return self.session(message)
-  
+
   def load_states(self, days=7):
     docs = db_query([
       ("type", "==", "agent_state"),
       ("prefix", "==", self.prefix),
-      ("timestamp", ">", datetime.now() - timedelta(days=days))              
-    ], return_docref=False)
+      ("timestamp", ">", datetime.now().astimezone() - timedelta(days=days))              
+    ], return_dict=True)
     
     states_loaded = []
     for doc in docs:
@@ -65,7 +68,7 @@ class ChatAgent:
       "type": "agent_state",
       "prefix": self.prefix,
       "state": state["content"],
-      "timestamp": datetime.now()})
+      "timestamp": datetime.now().astimezone()})
   
 class NotebookAgent:
   def __init__(self, repo_id=None):        
@@ -75,9 +78,10 @@ class NotebookAgent:
   def __call__(self, nb: "Notebook", use_cache=True):
     nb_fingerprint = f"{self.agent_prefix}-{nb.filename}-{nb.filehash}"
 
-    doc = db_get(nb_fingerprint)
-    if doc and use_cache and "summary" in doc:
-      return doc["summary"]
+    doc = db_get(nb_fingerprint, return_ref=False)
+    
+    if doc and use_cache and "summary" in doc:  # type: ignore
+      return doc["summary"]  # type: ignore
     else:
       summary = self.summarize(nb)
       db_put(nb_fingerprint, {"type": "notebook_summary",
@@ -85,7 +89,7 @@ class NotebookAgent:
                               "summary": summary, 
                               "filepath": str(nb.filename), 
                               "filehash": nb.filehash, 
-                              "timestamp": datetime.now()})
+                              "timestamp": datetime.now().astimezone()})
       return summary
     
   def summarize(self, nb):

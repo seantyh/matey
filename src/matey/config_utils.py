@@ -23,6 +23,14 @@ def find_config_file():
 
 _config = None
 
+def set_config(**kwargs):
+  global _config
+  if _config is None:
+    _config = get_config
+
+  for k, v in kwargs.items():
+    _config[k] = v # type: ignore
+
 def get_config(verbose=False):
   global _config
   if _config is not None:

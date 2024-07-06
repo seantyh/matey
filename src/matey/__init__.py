@@ -16,4 +16,5 @@ from .agent import (
   )
 from .config_utils import get_config
 from .vec_db import VecDB
+from .doc_store import DocStore
 from .image_utils import get_image_base64, get_clipboard_image
