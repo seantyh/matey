@@ -40,7 +40,7 @@ class ChatAgent:
     if context is not None:
       message = "Here are some contexts for this conversation: \n" +\
                 "## Context\n" + context + "\n\n" + message
-    return self.session(message, stream=True)
+    self.session(message, stream=True)
   
   @property
   def history(self):        
