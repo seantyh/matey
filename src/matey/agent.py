@@ -40,35 +40,17 @@ class ChatAgent:
     if context is not None:
       message = "Here are some contexts for this conversation: \n" +\
                 "## Context\n" + context + "\n\n" + message
-    return self.session(message)
+    return self.session(message, stream=True)
+  
+  @property
+  def history(self):        
+    def short(x):      
+      return x[:30] + ("..." if len(x) > 20 else "")
+    return [(i, x["role"], short(x["content"])) for i, x in enumerate(self.session.states)]
 
-  def load_states(self, days=7):
-    docs = db_query([
-      ("type", "==", "agent_state"),
-      ("prefix", "==", self.prefix),
-      ("timestamp", ">", datetime.now().astimezone() - timedelta(days=days))              
-    ], return_dict=True)
-    
-    states_loaded = []
-    for doc in docs:
-      if not isinstance(doc, dict): continue
-      doc_timestamp = doc["timestamp"].isoformat()
-      state = {"role": "user", 
-               "content": f"[{doc_timestamp}] " + doc["state"]}
-      self.session.states.append(state)
-      states_loaded.append(state)
-
-    return states_loaded
-
-  def save_state(self, offset=-1):
-    state = [x for x in self.session.states if x["role"]=="user"][offset]
-    state_hash = hashlib.sha1(str(state).encode()).hexdigest()
-    doc_key = f"mateyAgent-{state_hash}"
-    db_put(doc_key, {
-      "type": "agent_state",
-      "prefix": self.prefix,
-      "state": state["content"],
-      "timestamp": datetime.now().astimezone()})
+  def get(self, idx):
+    obj = self.session.states[idx]
+    return obj["content"]
   
 class NotebookAgent:
   def __init__(self, repo_id=None):        
