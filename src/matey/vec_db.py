@@ -15,19 +15,33 @@ def load_metadata(fpath):
     return []
   return json.loads(Path(fpath).read_text())
 
-class VecDB:  
-  def __init__(self, embmat_path=None, metadata_path=None):    
-    vdb_prefix = get_config().get("vdb_prefix", "vdb")  # type: ignore
-    if embmat_path is None:
-      embmat_path =  vdb_prefix + ".npy"
-    if metadata_path is None:
-      metadata_path = vdb_prefix + ".json"
+class VecDB:
+  __inst = None
+
+  def __init__(self, embmat, metadata,
+               embmat_path, metadata_path):
+    self.embmat = embmat
+    self.metadata = metadata
     self.embmat_path = embmat_path
     self.metadata_path = metadata_path
-    self.embmat = load_vecmat(embmat_path)
-    self.metadata = load_metadata(metadata_path)
+
+  @classmethod
+  def getInstance(cls, embmat_path=None, metadata_path=None):    
+    if cls.__inst is None:
+      vdb_prefix = get_config().get("vdb_prefix", "vdb")  # type: ignore
+      if embmat_path is None:
+        embmat_path =  vdb_prefix + ".npy"
+      if metadata_path is None:
+        metadata_path = vdb_prefix + ".json"
+      embmat_path = embmat_path
+      metadata_path = metadata_path
+      embmat = load_vecmat(embmat_path)
+      metadata = load_metadata(metadata_path)
+      cls.__inst = VecDB(embmat, metadata, embmat_path, metadata_path)
+    else:
+      return cls.__inst
   
-  def store(self, text_list, metadata=None):
+  def put(self, text_list, metadata=None):
     if isinstance(text_list, str):
       text_list = [text_list]
     if metadata is None:
@@ -55,6 +69,7 @@ class VecDB:
     else:
       self.embmat = np.concatenate([self.embmat, emb_list], axis=0)
     self.metadata.extend(metadata)
+    self.save()
   
   def ls(self):
     def short(x):

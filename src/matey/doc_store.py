@@ -11,7 +11,7 @@ class DocStore:
       self.repo_id = repo_id
     self.prefix = f"DocStore-00a"
 
-  def store(self, text):
+  def put(self, text):
     text_hash = hashlib.sha1(text.encode()).hexdigest()[:10]
     doc_key = f"{self.prefix}-{text_hash}"
     db_put(doc_key, {
