@@ -1,3 +1,8 @@
+from .api import (
+  put, ls, 
+  load_nb, binder, recent_files, 
+  chat, chat_history
+)
 from .config_utils import get_config
 from .llm_api import llm, chatgpt, sonnet, haiku, Session
 from .url_utils import jsonlink

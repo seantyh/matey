@@ -9,9 +9,8 @@ from .agent import DataIOAgent, NotebookAgent
 from .ipynb_types import NotebookCell, CellOutput
 
 class Notebook:
-    def __init__(self, filepath, filehash, cells):
-        self.filepath = filepath
-        self.filename: str = Path(filepath).stem
+    def __init__(self, filename, filehash, cells):
+        self.filename: str = filename
         self.filehash: str = filehash
         self.cells: list[NotebookCell] = cells
 
@@ -21,7 +20,6 @@ class Notebook:
         with open(nb_path, 'r') as f:
             nb = nbformat.read(f, as_version=4)
         
-        filename = nb_path.stem
         filehash = hashlib.sha1(nb_path.read_bytes()).hexdigest()
         cells = [NotebookCell(
                     c["cell_type"],
@@ -30,7 +28,7 @@ class Notebook:
                     c.get("metadata", {}))
                  for c in nb["cells"]]
 
-        notebook = Notebook(filename, filehash, cells)
+        notebook = Notebook(nb_path.stem, filehash, cells)
 
         return notebook
 
@@ -169,3 +167,9 @@ class Notebook:
         nb_agent = NotebookAgent()        
         summary = nb_agent(self, use_cache=use_cache)
         return summary
+    
+    def get_yaml(self):
+        cell = self.locate_cell(tag="yaml")
+        if cell is not None:
+            return cell[1].source
+        return ""
