@@ -39,17 +39,23 @@ class Notebook:
             buf.write("\n------\n")
         return buf.getvalue()
     
-    def search(self, pattern):
+    def search(self, pattern, return_idx=False):
         hits = []
         pat = re.compile(pattern)
         for cidx, c in enumerate(self.cells):
             if pat.search(c.source):
-                hits.append(c)
+                if return_idx:
+                    hits.append((cidx, c))
+                else:
+                    hits.append(c)
                 continue
 
             for output_x in c.outputs:
                 if pat.search(output_x.get_data("text/plain")):
-                    hits.append(c)
+                    if return_idx:
+                        hits.append((cidx, c))
+                    else:
+                        hits.append(c)
                     continue
         return hits          
         
@@ -100,13 +106,15 @@ class Notebook:
         return ret
     
     def input_files(self):
-        loc_cell = self.locate_cell(tag="indata")
-        if loc_cell is None:
+        tgt_cell = self.locate_cell(tag="indata")
+        if tgt_cell is None:
             loc_cell = self.locate_cell(cell_type="markdown", source="Data dependencies")
+            tgt_cell_idx = loc_cell[0] + 1 if loc_cell is not None else None
+        else:
+            tgt_cell_idx = tgt_cell[0]
 
         # Do the actual processing    
-        if loc_cell is not None:
-            tgt_cell_idx = loc_cell[0]+1
+        if tgt_cell_idx is not None:
             tgt_cell = self.cells[tgt_cell_idx]
             hash_lines = [o.get_data("text/plain") for o in tgt_cell.outputs]
             if hash_lines:
@@ -117,13 +125,15 @@ class Notebook:
         return None
     
     def output_files(self):
-        loc_cell = self.locate_cell(tag="outdata")
-        if loc_cell is None:
+        tgt_cell = self.locate_cell(tag="outdata")
+        if tgt_cell is None:
             loc_cell = self.locate_cell(cell_type="markdown", source="Export Art[ie]facts?")
+            tgt_cell_idx = loc_cell[0] + 1 if loc_cell is not None else None
+        else:
+            tgt_cell_idx = tgt_cell[0]
         
         # Do the actual processing
-        if loc_cell is not None:
-            tgt_cell_idx = loc_cell[0]+1
+        if tgt_cell_idx is not None:
             tgt_cell = self.cells[tgt_cell_idx]
             hash_lines = [o.get_data("text/plain") for o in tgt_cell.outputs]
             if hash_lines:
@@ -147,8 +157,15 @@ class Notebook:
 
         if input_files is None or output_files is None:                                
             io_agent = DataIOAgent()
-            hash_cells = self.search("[a-z0-9]{40}")
-            cell_rags = "\n".join(str(cell_x) for cell_x in hash_cells)
+            hash_cells = self.search("[a-z0-9]{40}", return_idx=True)
+
+            ctx_cells = []
+            for cell_idx, _ in hash_cells:
+                for ctx_idx in range(cell_idx-2, cell_idx+1):
+                    if ctx_idx < 0 or ctx_idx > len(self.cells): continue
+                    ctx_cells.append(self.cells[ctx_idx])
+                    
+            cell_rags = "\n".join(str(cell_x) for cell_x in ctx_cells)
             io_resp = io_agent(cell_rags)
             try:
                 io_resp = json.loads(io_resp)

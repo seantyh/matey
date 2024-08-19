@@ -1,6 +1,8 @@
 Help the user find the input data hash and output data hash based on the context.
 The context is from the content of the relevant jupyter notebook cells.
 Use the code and the order to decide the input and output data hashes.
+The inputs usually follow a "Data dependencies" title, and 
+the outputs usually follow a "Export Artefact" title.
 If the code has the variable name with "out," it is the output hash.
 
 It is possible that the inputs is empty or the outputs is empty.
